@@ -10,7 +10,7 @@ app.options('*', (req, res) => {
 
 app.get('/', (req, res) => {
 	// Test example
-	scraper().then(resolve => {
+	scraper.test().then(resolve => {
 		console.log('you did it!')
 	})
 })
