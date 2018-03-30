@@ -60,3 +60,6 @@ typings/
 # System files
 .DS_Store
 
+# Test output pdf
+*.pdf
+

@@ -1,7 +1,7 @@
 const phantom = require('phantom')
 
 module.exports = {
-  test: async function() {
+  test: async () => {
     const instance = await phantom.create()
     const page = await instance.createPage()
 
@@ -13,5 +13,16 @@ module.exports = {
     console.log(`File created at [./stackoverflow.pdf]`)
 
     await instance.exit()
+  },
+
+  run: async (config) => {
+    console.log(config)
+
+    // Initialize PhantomJS
+    const instance = await phantom.create()
+    const page = await instance.createPage()
+
+    // Load linkedin URL via config
+    console.log(config.search_url)
   }
 }
