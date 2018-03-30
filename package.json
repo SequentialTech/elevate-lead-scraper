@@ -1,0 +1,14 @@
+{
+  "name": "elevate-lead-scraper",
+  "version": "1.0.0",
+  "description": "get those leads baby",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "EJ Rudy",
+  "license": "ISC",
+  "dependencies": {
+    "expres": "0.0.5"
+  }
+}
