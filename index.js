@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const scraper = require('./scraper')
 const express = require('express')
 const bodyParser = require('body-parser')
