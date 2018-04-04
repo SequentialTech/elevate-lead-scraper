@@ -6,11 +6,11 @@ const bodyParser = require('body-parser')
 const app = express()
 
 
- /**
-  * Test route for debugging
-  *
-  * @return void
-  */
+/**
+ * Test route for debugging
+ *
+ * @return void
+*/
 
 app.get('/', (req, res) => {
   console.log('running test example...')
@@ -22,16 +22,23 @@ app.get('/', (req, res) => {
 
 
 /**
- * Main scraper route, will accept config variables in the POST body and an accesskey in the headers
+ * Main scraper route, will accept configuration variables in the request body and an Access-Key in the headers
  *
  * @params Scraper config, access key
- * @return JSON
- */
+ * @return void, will send results to Elevate via webhook
+*/
 
 app.post('/', (req, res) => {
-  console.log(scraper.run({url: "https://www.linkedin.com/sales/search/companies?facet=CCR&facet.CCR=us%3A52&count=100&start=0"}))
+  console.log('Scrape request received!\n\n')
+  scraper.run({
+    url: "https://www.linkedin.com/sales/search/companies?facet=CCR&facet.CCR=us%3A52&count=100&start=0",
+    email: process.env.LINKEDIN_EMAIL,
+    password: process.env.LINKEDIN_PASSWORD
+  })
   res.writeHead(200)
   res.end()
 })
 
-app.listen(3000, () => console.info('Server running.'))
+
+// Initialize server
+app.listen(3000, () => console.info('Server running.\n'))
