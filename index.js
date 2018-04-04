@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
  */
 
 app.post('/', (req, res) => {
-  console.log(req.body)
+  console.log(scraper.run({url: "https://www.linkedin.com/sales/search/companies?facet=CCR&facet.CCR=us%3A52&count=100&start=0"}))
   res.writeHead(200)
   res.end()
 })
