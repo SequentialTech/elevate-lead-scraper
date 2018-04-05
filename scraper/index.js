@@ -36,7 +36,7 @@ module.exports = {
 
     // 2) If initial page loaded successfully, fill out login form
     if(status === 'success'){
-      console.log('Filling out login form...')
+      console.log('\nFilling out login form...')
       await page.evaluate(helpers.login, config)
       step = 'searchResults'
     } else{
@@ -58,27 +58,35 @@ module.exports = {
     // Handle page load
     await page.on('onLoadFinished', async function(status) {
       if(status !== 'success'){
-        console.error('Error loading page')
+        console.error('\nError loading page')
         await instance.exit()
         return false
       }
       var url = await page.property('url')
-      console.log('\n')
       console.log(status, url)
-      console.log('\n\n')
 
       // Ignore this redirect page
       if(url.indexOf('contract-chooser') !== -1) {
-        console.log('Ignore page')
+        console.log('\nIgnore page')
         return true
       }
 
-      console.log('Page load finished, executing page evaluation')
+      console.log('\nPage load finished, executing page evaluation')
       switch(step){
+
         case 'searchResults':
-          console.log('Parsing search results')
+          console.log('\nParsing search results')
           results = await page.evaluate(helpers.searchResults, config)
-          await instance.exit()
+          step = 'checkResult'
+          page.open(results[current_result])
+          break
+
+        case 'checkResult':
+          console.log('\nChecking result: ' + results[current_result])
+          result = await page.evaluate(helpers.checkResult, config)
+          console.log(result) // Need to evaluate against config and send
+          if(results[current_result++]) page.open(results[current_result])
+          else await instance.exit()
           break
       }
       //var content = await page.property('content')
@@ -87,8 +95,7 @@ module.exports = {
 
     // URL Change
     await page.on('onLoadStarted', function() {
-      console.log('\n\n')
-      console.log('Page requested')
+      console.log('\nPage requested')
     })
 
     // Page log -> cli

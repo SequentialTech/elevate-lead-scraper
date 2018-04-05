@@ -29,7 +29,7 @@ app.get('/', (req, res) => {
 */
 
 app.post('/', (req, res) => {
-  console.log('Scrape request received!\n\n')
+  console.log('\nScrape request received!')
   scraper.run({
     url: "https://www.linkedin.com/sales/search/companies?facet=CCR&facet.CCR=us%3A52&count=100&start=0",
     email: process.env.LINKEDIN_EMAIL,
@@ -41,4 +41,4 @@ app.post('/', (req, res) => {
 
 
 // Initialize server
-app.listen(3000, () => console.info('Server running.\n'))
+app.listen(3000, () => console.info('Server running.'))

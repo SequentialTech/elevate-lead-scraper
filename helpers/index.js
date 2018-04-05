@@ -27,6 +27,18 @@ module.exports = {
     }
 
     return result_urls
+  },
+
+  checkResult: function(config) {
+    console.log('Checking details of result...')
+    var t // Timeout
+    var percent_container = document.querySelectorAll('aside.insights-employee-container dl.graph-footer dd.graph-stats')
+    var company_size_container = document.querySelectorAll('aside.insights-employee-container dl.graph-footer dt.graph-stats')
+
+    return {
+      percentage_growth: percent_container.innerHTML.trim(" "),
+      company_size: company_size_container.innerHTML.trim(" ")
+    }
   }
 }
 
