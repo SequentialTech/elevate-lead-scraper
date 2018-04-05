@@ -18,7 +18,7 @@ module.exports = {
   },
 
 
-  run: async (config) => {
+  run: async (config, urls) => {
     // Step variable (will determine function to execute)
     var step = ''
 
@@ -26,12 +26,16 @@ module.exports = {
     var results = []
 
     // Current result variable (holds result index)
-    var current_result = 0
+    var current_search = 0
+
+    // Variable to track search pages
+    var start_at = 0
+
 
     // 1) Initialize phantom
     const instance = await phantom.create()
     const page = await instance.createPage()
-    const status = await page.open(config.url)
+    const status = await page.open(urls[current_search]+start_at)
 
 
     // 2) If initial page loaded successfully, fill out login form
@@ -45,17 +49,8 @@ module.exports = {
       return false
     }
 
-    // 3) After successful login, on the search results page (iterating)
-    //  3.1) Scan for li.result
-    //  3.2) Create array of result URLs by constructing URL with id (/sales/company/{id}/insights)
-    //  3.3) Navigate to result URL (iterating):
-    //    3.3.1) Pull aside.insights-employee-container dl.graph-footer dd.graph-stats content (percentage growth)
-    //    3.3.2) Pull aside.insights-employee-container dt.graph-footer dd.graph-stats content (company size)
-    //    3.3.3) Check config windows against values, and if appropriate, save result on Elevate
-    //    3.3.4) Begin step 3.3 again with next url on list
-    //  3.4) Once results have been iterated through, begin step 3 with next page
 
-    // Handle page load
+    // 3) Handle subsequent page loads
     await page.on('onLoadFinished', async function(status) {
       if(status !== 'success'){
         console.error('\nError loading page')
@@ -77,20 +72,34 @@ module.exports = {
         case 'searchResults':
           console.log('\nParsing search results')
           results = await page.evaluate(helpers.searchResults, config)
-          step = 'checkResult'
-          page.open(results[current_result])
-          break
 
-        case 'checkResult':
-          console.log('\nChecking result: ' + results[current_result])
-          result = await page.evaluate(helpers.checkResult, config)
-          console.log(result) // Need to evaluate against config and send
-          if(results[current_result++]) page.open(results[current_result])
-          else await instance.exit()
+          // Report results to Elevate if present
+          if(results.length){
+            // To do: send to elevate
+          }
+
+          console.log(results)
+
+          // If results are empty, proceed to next search url
+          if(!results.length || results.length < 100){
+            // If final search, exit!
+            if(!urls[current_search + 1]){
+              console.log('\Final search executed, exiting.')
+              await instance.exit()
+              return true
+            }
+            console.log('\nEmpty results or final result set, proceeding to next search')
+            start_at = 0
+            page.open(urls[current_search++]+start_at)
+            break
+          } else{
+            console.log('\nNavigating to next page of results')
+            start_at += 100
+            page.open(urls[current_search]+start_at)
+            break
+          }
           break
       }
-      //var content = await page.property('content')
-      //console.log(content)
     })
 
     // URL Change
