@@ -45,6 +45,7 @@ module.exports = {
       companies.push({
         company_name: company_name,
         linkedin_id: company_id,
+        config_id: config.id,
         linkedin_url: base_url+company_id+'/insights'
       })
     }

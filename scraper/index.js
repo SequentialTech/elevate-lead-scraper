@@ -1,5 +1,6 @@
 //const logger = require('./logger').createLogger(`logs/development.log`); // logs to a file
 const phantom = require('phantom')
+const axios = require('axios')
 const helpers = require('../helpers')
 
 module.exports = {
@@ -8,10 +9,10 @@ module.exports = {
     const page = await instance.createPage()
 
     await page.property('viewportSize', { width: 1024, height: 600 })
-    const status = await page.open('https://stackoverflow.com/')
+    const status = await page.open('http://www.polkpa.org/CamaDisplay.aspx?OutputMode=Display&SearchType=RealEstate&ParcelID=242903273002003260')
     console.log(`Page opened with status [${status}].`)
 
-    await page.render('stackoverflow.pdf')
+    await page.render('rendering.pdf')
     console.log(`File created at [./stackoverflow.pdf]`)
 
     await instance.exit()
@@ -72,13 +73,26 @@ module.exports = {
         case 'searchResults':
           console.log('\nParsing search results')
           results = await page.evaluate(helpers.searchResults, config)
+          console.log(results)
 
           // Report results to Elevate if present
           if(results.length){
-            // To do: send to elevate
+            console.log('\nSending results to elevate..')
+            axios.post(config.elevate+'/scrape-results', {results: results}, {
+              headers: {
+                'Content-type': 'application/json'
+              }
+            })
+            .then(rsp => {
+              // To Do (Log all responses?)
+              console.info(rsp.data)
+            })
+            .catch(error => {
+              // To Do (What should behavior be for failure? Simply log?)
+              console.error(error)
+            })
           }
 
-          console.log(results)
 
           // If results are empty, proceed to next search url
           if(!results.length || results.length < 100){

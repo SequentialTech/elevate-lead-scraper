@@ -16,7 +16,7 @@ const app = express()
 app.get('/', (req, res) => {
   console.log('running test example...')
 	scraper.test().then(resolve => {
-		console.log('you did it! there should be a pdf rendering of the stackoverflow homepage in the root directory')
+		console.log('you did it! there should be a pdf rendering of the page in the root directory')
 	})
 })
 
@@ -45,7 +45,8 @@ app.post('/', (req, res) => {
     size_h: 3,
     size_i: 2,
     email: process.env.LINKEDIN_EMAIL,
-    password: process.env.LINKEDIN_PASSWORD
+    password: process.env.LINKEDIN_PASSWORD,
+    elevate: process.env.ELEVATE_URL
   }
   const urls = helpers.constructUrls(config)
   scraper.run(config, urls)
@@ -55,4 +56,4 @@ app.post('/', (req, res) => {
 
 
 // Initialize server
-app.listen(3000, () => console.info('Server running.'))
+app.listen(3001, () => console.info('Server running.'))
