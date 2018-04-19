@@ -9,7 +9,8 @@ module.exports = {
     const page = await instance.createPage()
 
     await page.property('viewportSize', { width: 1024, height: 600 })
-    const status = await page.open('http://www.polkpa.org/CamaDisplay.aspx?OutputMode=Display&SearchType=RealEstate&ParcelID=242903273002003260')
+    //const status = await page.open('http://www.polkpa.org/CamaDisplay.aspx?OutputMode=Display&SearchType=RealEstate&ParcelID=242903273002003260')
+    const status = await page.open('http://www.polkpa.org/LegalDesc.aspx?strap=242903273002003260')
     console.log(`Page opened with status [${status}].`)
 
     await page.render('rendering.pdf')

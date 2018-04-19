@@ -6,18 +6,22 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const app = express()
 
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// JSON parsing
+app.use(bodyParser.json())
+
 
 /**
- * Test route for debugging
+ * Test route for checking service availability
  *
  * @return void
 */
 
 app.get('/', (req, res) => {
-  console.log('running test example...')
-	scraper.test().then(resolve => {
-		console.log('you did it! there should be a pdf rendering of the page in the root directory')
-	})
+  res.writeHead(200)
+  res.end()
 })
 
 
@@ -31,29 +35,37 @@ app.get('/', (req, res) => {
 
 app.post('/', (req, res) => {
   console.log('\nScrape request received!')
+
+  // Validate key in header
+  if(req.headers['scrape-key'] === process.env.ELEVATE_KEY){
+    res.writeHead(403)
+    res.end()
+    return
+  }
+
+  // Validate request body
+  if(!req.body.id || !req.body.size_b || !req.body.size_c || !req.body.size_d || !req.body.size_e || !req.body.size_f || !req.body.size_g || !req.body.size_h || !req.body.size_i){
+    res.writeHead(400)
+    res.end()
+    return
+  }
+
   // To Do: Pull this from request body
   const config = {
-    id: 1,
-    name: 'Default Scrape',
-    emails: 'ej@sequential.tech',
-    size_b: 100,
-    size_c: 50,
-    size_d: 20,
-    size_e: 10,
-    size_f: 5,
-    size_g: 4,
-    size_h: 3,
-    size_i: 2,
+    ...req.body,
     email: process.env.LINKEDIN_EMAIL,
     password: process.env.LINKEDIN_PASSWORD,
     elevate: process.env.ELEVATE_URL
   }
+
+  // Construct search URLs via config
   const urls = helpers.constructUrls(config)
-  scraper.run(config, urls)
+
+  //scraper.run(config, urls)
   res.writeHead(200)
   res.end()
 })
 
 
 // Initialize server
-app.listen(3001, () => console.info('Server running.'))
+app.listen(3001, () => console.info('Server running on port 3001.'))
