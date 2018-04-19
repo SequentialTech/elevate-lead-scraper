@@ -37,7 +37,7 @@ app.post('/', (req, res) => {
   console.log('\nScrape request received!')
 
   // Validate key in header
-  if(req.headers['scrape-key'] === process.env.ELEVATE_KEY){
+  if(req.headers['scrape-key'] !== process.env.ELEVATE_KEY){
     res.writeHead(403)
     res.end()
     return
