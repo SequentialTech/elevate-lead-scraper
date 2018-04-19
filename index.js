@@ -68,4 +68,4 @@ app.post('/', (req, res) => {
 
 
 // Initialize server
-app.listen(3001, () => console.info('Server running on port 3001.'))
+app.listen(process.env.PORT, () => console.info('Server running on port ' + process.env.PORT))
