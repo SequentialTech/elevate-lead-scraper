@@ -42,10 +42,19 @@ module.exports = {
       var company_id = label.getAttribute('data-id')
       var company_name = name.innerHTML
 
+      // Iterate through info to capture industry and company size
+      var info_points = result.querySelectorAll("p.info-value")
+      if(info_points.length < 2) continue // If data is not present, or fully present, ignore
+      
+      var industry = info_points[0].innerHTML
+      var number_employees = info_points.length > 2 ? info_points[2].innerHTML : info_points[1].innerHTML
+
       companies.push({
         company_name: company_name,
         linkedin_id: company_id,
         config_id: config.id,
+        industry: industry,
+        number_employees: number_employees,
         linkedin_url: base_url+company_id+'/insights'
       })
     }
