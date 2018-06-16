@@ -50,7 +50,7 @@ app.post('/', (req, res) => {
     return
   }
 
-  // To Do: Pull this from request body
+  // Pull from request body
   const config = {
     ...req.body,
     email: process.env.LINKEDIN_EMAIL,
@@ -62,6 +62,43 @@ app.post('/', (req, res) => {
   const urls = helpers.constructUrls(config)
 
   scraper.run(config, urls)
+  res.writeHead(200)
+  res.end()
+})
+
+
+/**
+ * Indeed Page scraper, will accept configuration variables and scrape results in the request body and an Access-Key in the headers
+ *
+ * @params Scraper config, access key
+ * @return void, will send results to Elevate via webhook
+*/
+
+app.post('/indeed', (req, res) => {
+  console.log('\nScrape request received!')
+
+  // Validate key in header
+  if(req.headers['scrape-key'] !== process.env.ELEVATE_KEY){
+    res.writeHead(403)
+    res.end()
+    return
+  }
+
+  // Validate request body
+  if(!req.body.companies){
+    console.log(req.body)
+    res.writeHead(400)
+    res.end()
+    return
+  }
+
+  // Pull from request body
+  const config = {
+    ...req.body,
+    elevate: process.env.ELEVATE_URL
+  }
+
+  scraper.runIndeed(config, config.companies)
   res.writeHead(200)
   res.end()
 })

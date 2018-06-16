@@ -1,25 +1,8 @@
-//const logger = require('./logger').createLogger(`logs/development.log`); // logs to a file
 const phantom = require('phantom')
 const axios = require('axios')
 const helpers = require('../helpers')
 
 module.exports = {
-  test: async () => {
-    const instance = await phantom.create()
-    const page = await instance.createPage()
-
-    await page.property('viewportSize', { width: 1024, height: 600 })
-    //const status = await page.open('http://www.polkpa.org/CamaDisplay.aspx?OutputMode=Display&SearchType=RealEstate&ParcelID=242903273002003260')
-    const status = await page.open('http://www.polkpa.org/LegalDesc.aspx?strap=242903273002003260')
-    console.log(`Page opened with status [${status}].`)
-
-    await page.render('rendering.pdf')
-    console.log(`File created at [./stackoverflow.pdf]`)
-
-    await instance.exit()
-  },
-
-
   run: async (config, urls) => {
     // Step variable (will determine function to execute)
     var step = ''
@@ -76,6 +59,8 @@ module.exports = {
           results = await page.evaluate(helpers.searchResults, config)
           console.log(results)
 
+          // Fetch indeed results from results
+
           // Report results to Elevate if present
           if(results.length){
             console.log('\nSending results to elevate..')
@@ -99,7 +84,7 @@ module.exports = {
           if(!results.length || results.length < 100){
             // If final search, exit!
             if(!urls[current_search + 1]){
-              console.log('\Final search executed, exiting.')
+              console.log('\nFinal search executed, exiting.')
               await instance.exit()
               return true
             }
@@ -125,6 +110,49 @@ module.exports = {
     // Page log -> cli
     await page.on('onConsoleMessage', function(msg, lineNum, sourceId) {
       console.log('\nWeb page logged: ' + msg)
+    })
+
+  },
+
+
+  runIndeed: async (config, companies) => {
+      
+    // 1) Initialize phantom
+    const instance = await phantom.create()
+    const page = await instance.createPage()
+    
+    // Page log -> cli
+    await page.on('onConsoleMessage', function(msg, lineNum, sourceId) {
+      console.log('\nWeb page logged: ' + msg)
+    })
+    
+    // Results array
+    var results = []
+
+    // 2) Scrape each url
+    companies.forEach(async (company, index) => {
+      let status = await page.open(company.indeed_url)
+
+      // If initial page loaded successfully, scrape data
+      if(status === 'success'){
+        console.log('\nPulling indeed data...')
+        company.job_listing_count = await page.evaluate(helpers.indeed)
+        results.push(company)
+
+        // If last company, exit
+        if(!companies[index + 1]){
+          console.log('\nFinal scrape executed, exiting.')
+          await instance.exit()
+          
+          // Send results back to elevate
+          console.log(results)
+          return true
+        }
+      } else{
+        console.log('failed to load')
+        await instance.exit()
+        return false
+      }
     })
 
   }

@@ -8,7 +8,7 @@ module.exports = {
     const base = 'https://www.linkedin.com/sales/search/companies?geoScope=BY_REGION&facet=CCR&facet=CS&facet.CCR=us%3A52&count=100&maxCompanyGrowth=100&REV=USD'
     const sizes = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
 
-    return sizes.map((size) => {
+    return sizes.map( size => {
       return `${base}&facet.CS=${size.toUpperCase()}&minCompanyGrowth=${config['size_'+size]}&start=`
     })
   },
@@ -26,6 +26,8 @@ module.exports = {
   searchResults: function(config) {
     var base_url = "https://www.linkedin.com/sales/company/"
     var companies = []
+
+    var base_indeed = "https://www.indeed.com/jobs?l=Georgia&q="
 
     var results = document.getElementsByClassName('result')
 
@@ -55,14 +57,20 @@ module.exports = {
         config_id: config.id,
         industry: industry,
         number_employees: number_employees,
-        linkedin_url: base_url+company_id+'/insights'
+        linkedin_url: base_url+company_id+'/insights',
+        indeed_url: base_indeed+encodeURIComponent(company_name)
       })
     }
 
     return companies
   },
 
-  getNextPage: function(config){
+  indeed: function(){
+    if(document.querySelectorAll('div.bad_query').length) return 0
 
+    var el = document.querySelector('#searchCount')
+    var job_count = parseInt(el.innerHTML.split('of')[1].split(' ')[1])
+    
+    return job_count
   }
 }
