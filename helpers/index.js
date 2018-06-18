@@ -69,8 +69,7 @@ module.exports = {
     if(document.querySelectorAll('div.bad_query').length) return 0
 
     var el = document.querySelector('#searchCount')
-    var job_count = parseInt(el.innerHTML.split('of')[1].split(' ')[1])
     
-    return job_count
+    return parseInt(el.innerHTML.split('of')[1].split(' ')[1])
   }
 }

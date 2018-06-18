@@ -1,5 +1,6 @@
 const phantom = require('phantom')
 const axios = require('axios')
+const async = require('async')
 const helpers = require('../helpers')
 
 module.exports = {
@@ -25,11 +26,11 @@ module.exports = {
 
     // 2) If initial page loaded successfully, fill out login form
     if(status === 'success'){
-      console.log('\nFilling out login form...')
+      //console.log('\nFilling out login form...')
       await page.evaluate(helpers.login, config)
       step = 'searchResults'
     } else{
-      console.log('failed to load')
+      //console.log('failed to load')
       await instance.exit()
       return false
     }
@@ -38,32 +39,32 @@ module.exports = {
     // 3) Handle subsequent page loads
     await page.on('onLoadFinished', async function(status) {
       if(status !== 'success'){
-        console.error('\nError loading page')
+        //console.error('\nError loading page')
         await instance.exit()
         return false
       }
       var url = await page.property('url')
-      console.log(status, url)
+      //console.log(status, url)
 
       // Ignore this redirect page
       if(url.indexOf('contract-chooser') !== -1) {
-        console.log('\nIgnore page')
+        //console.log('\nIgnore page')
         return true
       }
 
-      console.log('\nPage load finished, executing page evaluation')
+      //console.log('\nPage load finished, executing page evaluation')
       switch(step){
 
         case 'searchResults':
-          console.log('\nParsing search results')
+          //console.log('\nParsing search results')
           results = await page.evaluate(helpers.searchResults, config)
-          console.log(results)
+          //console.log(results)
 
           // Fetch indeed results from results
 
           // Report results to Elevate if present
           if(results.length){
-            console.log('\nSending results to elevate..')
+            //console.log('\nSending results to elevate..')
             axios.post(config.elevate+'/scrape-results', {results: results}, {
               headers: {
                 'Content-type': 'application/json'
@@ -71,11 +72,11 @@ module.exports = {
             })
             .then(rsp => {
               // To Do (Log all responses?)
-              console.info(rsp.data)
+              //console.info(rsp.data)
             })
             .catch(error => {
               // To Do (What should behavior be for failure? Simply log?)
-              console.error(error)
+              //console.error(error)
             })
           }
 
@@ -84,16 +85,16 @@ module.exports = {
           if(!results.length || results.length < 100){
             // If final search, exit!
             if(!urls[current_search + 1]){
-              console.log('\nFinal search executed, exiting.')
+              //console.log('\nFinal search executed, exiting.')
               await instance.exit()
               return true
             }
-            console.log('\nEmpty results or final result set, proceeding to next search')
+            //console.log('\nEmpty results or final result set, proceeding to next search')
             start_at = 0
             page.open(urls[current_search++]+start_at)
             break
           } else{
-            console.log('\nNavigating to next page of results')
+            //console.log('\nNavigating to next page of results')
             start_at += 100
             page.open(urls[current_search]+start_at)
             break
@@ -104,12 +105,12 @@ module.exports = {
 
     // URL Change
     await page.on('onLoadStarted', function() {
-      console.log('\nPage requested')
+      //console.log('\nPage requested')
     })
 
     // Page log -> cli
     await page.on('onConsoleMessage', function(msg, lineNum, sourceId) {
-      console.log('\nWeb page logged: ' + msg)
+      //console.log('\nWeb page logged: ' + msg)
     })
 
   },
@@ -125,35 +126,54 @@ module.exports = {
     await page.on('onConsoleMessage', function(msg, lineNum, sourceId) {
       console.log('\nWeb page logged: ' + msg)
     })
-    
-    // Results array
+
+    // 2) Scrape each url, in series, stacked to fire every two seconds to avoid rate-limiting restraint
     var results = []
-
-    // 2) Scrape each url
-    companies.forEach(async (company, index) => {
-      let status = await page.open(company.indeed_url)
-
-      // If initial page loaded successfully, scrape data
-      if(status === 'success'){
-        console.log('\nPulling indeed data...')
-        company.job_listing_count = await page.evaluate(helpers.indeed)
-        results.push(company)
-
-        // If last company, exit
-        if(!companies[index + 1]){
-          console.log('\nFinal scrape executed, exiting.')
-          await instance.exit()
+    var total_to_process = companies.length
+    
+    async.series(companies.map( (company, index) => {
+      
+      return ((callback) => {
+        
+        setTimeout(async (company, results, total_to_process) => {
+          let status = await page.open(company.indeed_url)
+          console.log(`attempting: ${company.indeed_url}, status: ${status}`)
           
-          // Send results back to elevate
-          console.log(results)
-          return true
-        }
-      } else{
-        console.log('failed to load')
+          // If initial page loaded successfully, scrape data
+          if(status === 'success'){
+            console.log('\nPulling indeed data...')
+            company.job_listing_count = await page.evaluate(helpers.indeed)
+            callback(null, company)
+          } else{
+            console.log('no listings')
+            company.job_listing_count = 0
+            callback(null, company)
+          }
+        }, (index + 1) * 2000, company, results, total_to_process)
+
+      }).bind()
+
+    }), async (err, results) => {
+      console.log(results, total_to_process)
+      // Send results when results length matches companies length
+      if(results.length === total_to_process){
+        console.log('firing results to elevate')
+        axios.post(config.elevate+'/indeed-results', {results: results}, {
+          headers: {
+            'Content-type': 'application/json'
+          }
+        })
+        .then(rsp => {
+          // To Do (Log all responses?)
+          console.info(rsp.data)
+        })
+        .catch(error => {
+          // To Do (What should behavior be for failure? Simply log?)
+          console.error(error)
+        })
         await instance.exit()
-        return false
+        return true        
       }
     })
-
   }
 }

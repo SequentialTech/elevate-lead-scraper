@@ -75,7 +75,7 @@ app.post('/', (req, res) => {
 */
 
 app.post('/indeed', (req, res) => {
-  console.log('\nScrape request received!')
+  console.log('\nIndeed scrape request received!')
 
   // Validate key in header
   if(req.headers['scrape-key'] !== process.env.ELEVATE_KEY){
