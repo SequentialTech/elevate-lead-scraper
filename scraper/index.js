@@ -135,7 +135,7 @@ module.exports = {
       
       return ((callback) => {
         
-        setTimeout(async (company, results, total_to_process) => {
+        setTimeout(async (company) => {
           let status = await page.open(company.indeed_url)
           console.log(`attempting: ${company.indeed_url}, status: ${status}`)
           
@@ -149,7 +149,7 @@ module.exports = {
             company.job_listing_count = 0
             callback(null, company)
           }
-        }, (index + 1) * 2000, company, results, total_to_process)
+        }, (index + 1) * 2000, company)
 
       }).bind()
 
