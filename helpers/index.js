@@ -5,7 +5,7 @@ module.exports = {
     // facet.CS (Company Size, loop through)
     // minCompanyGrowth (specified in config per company size)
 
-    const base = 'https://www.linkedin.com/sales/search/companies?geoScope=BY_REGION&facet=CCR&facet=CS&facet.CCR=us%3A52&count=50&maxCompanyGrowth=100&REV=USD'
+    const base = 'https://www.linkedin.com/sales/search/companies?geoScope=BY_REGION&facet=CCR&facet=CS&facet.CCR=us%3A52&count=75&maxCompanyGrowth=100&REV=USD'
     const sizes = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
 
     return sizes.map( size => {
