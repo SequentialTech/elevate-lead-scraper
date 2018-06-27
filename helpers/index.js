@@ -56,7 +56,7 @@ module.exports = {
         linkedin_id: company_id,
         config_id: config.id,
         industry: industry,
-        number_employees: number_employees,
+        number_employees: number_employees, 
         linkedin_url: base_url+company_id+'/insights',
         indeed_url: base_indeed+encodeURIComponent(company_name)
       })
@@ -71,5 +71,23 @@ module.exports = {
     var el = document.querySelector('#searchCount')
     
     return parseInt(el.innerHTML.split('of')[1].split(' ')[1])
+  },
+
+  appendGrowthPercent: function(results, config){
+    const sizeMap = {
+      '1-10 employees': 'size_b',
+      '11-50 employees': 'size_c',
+      '51-200 employees': 'size_d',
+      '201-500 employees': 'size_e',
+      '501-1000 employees': 'size_f',
+      '1001-5000 employees': 'size_g',
+      '5001-10,000 employees': 'size_h',
+      '10,000+ employees': 'size_i',
+    }
+    results.forEach(result => {
+      result.growth_percent = config[sizeMap[result.number_employees]]
+      console.log(result, config[sizeMap[result.number_employees]])
+    })
+    return results
   }
 }

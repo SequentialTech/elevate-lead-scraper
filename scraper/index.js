@@ -65,6 +65,9 @@ module.exports = {
           // Report results to Elevate if present
           if(results.length){
             //console.log('\nSending results to elevate..')
+            // Append the growth % to each result
+            results = helpers.appendGrowthPercent(results, config)
+
             axios.post(config.elevate+'/scrape-results', {results: results}, {
               headers: {
                 'Content-type': 'application/json'
