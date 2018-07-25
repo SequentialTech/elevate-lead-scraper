@@ -75,11 +75,11 @@ module.exports = {
             })
             .then(rsp => {
               // To Do (Log all responses?)
-              //console.info(rsp.data)
+              console.info(rsp.data)
             })
             .catch(error => {
               // To Do (What should behavior be for failure? Simply log?)
-              //console.error(error)
+              console.error(error)
             })
           }
 
@@ -120,11 +120,11 @@ module.exports = {
 
 
   runIndeed: async (config, companies) => {
-      
+
     // 1) Initialize phantom
     const instance = await phantom.create()
     const page = await instance.createPage()
-    
+
     // Page log -> cli
     await page.on('onConsoleMessage', function(msg, lineNum, sourceId) {
       console.log('\nWeb page logged: ' + msg)
@@ -133,15 +133,15 @@ module.exports = {
     // 2) Scrape each url, in series, stacked to fire every two seconds to avoid rate-limiting restraint
     var results = []
     var total_to_process = companies.length
-    
+
     async.series(companies.map( (company, index) => {
-      
+
       return ((callback) => {
-        
+
         setTimeout(async (company) => {
           let status = await page.open(company.indeed_url)
           console.log(`attempting: ${company.indeed_url}, status: ${status}`)
-          
+
           // If initial page loaded successfully, scrape data
           if(status === 'success'){
             console.log('\nPulling indeed data...')
@@ -175,7 +175,7 @@ module.exports = {
           console.error(error)
         })
         await instance.exit()
-        return true        
+        return true
       }
     })
   }
