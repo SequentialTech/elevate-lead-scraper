@@ -16,7 +16,7 @@ module.exports = {
   login: function(config) {
     var email_input = document.querySelector('input#username')
     var password_input = document.querySelector('input#password')
-    var submit_button = document.querySelector('input[type=submit]')
+    var submit_button = document.querySelector('button[type=submit]')
 
     email_input.value = config.email
     password_input.value = config.password
