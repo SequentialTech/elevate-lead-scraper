@@ -83,7 +83,7 @@ module.exports = {
       '501-1000 employees': 'size_f',
       '1001-5000 employees': 'size_g',
       '5001-10,000 employees': 'size_h',
-      '10,000+ employees': 'size_i',
+      '10,001+ employees': 'size_i',
     }
     results.forEach(result => {
       result.growth_percent = config[sizeMap[result.number_employees]]
