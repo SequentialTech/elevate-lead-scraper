@@ -24,32 +24,33 @@ module.exports = {
   },
 
   searchResults: function(config) {
-    var base_url = "https://www.linkedin.com/sales/company/"
+    var base_url = "https://www.linkedin.com"
     var companies = []
 
     var base_indeed = "https://www.indeed.com/jobs?l=Georgia&q="
 
-    var results = document.getElementsByClassName('result')
+    var results = document.getElementsByClassName('search-results__result-item')
+    console.log('results: ', results)
 
     for(var i = 0; i<results.length; i++){
       var result = results[i]
+      console.log('result: ', result)
       if(!result) continue
 
-      var label = result.querySelector('label.bulk-select')
-      if(!label) continue
-
-      var name = result.querySelector('a.name-link')
+      var name = result.querySelector('dt.result-lockup__name a')
+      console.log('name: ', name)
       if(!name) continue
 
-      var company_id = label.getAttribute('data-id')
-      var company_name = name.innerHTML
+      var company_url = name.getAttribute('href').split('?')[0]
+      var company_name = name.innerHTML.replace(/(\r\n|\n|\r)/gm, "").replace(/^\s+/, "")
+      var company_id = company_url.split('/')[3]
 
       // Iterate through info to capture industry and company size
-      var info_points = result.querySelectorAll("p.info-value")
+      var info_points = result.querySelectorAll("li.result-lockup__misc-item")
       if(info_points.length < 2) continue // If data is not present, or fully present, ignore
 
-      var industry = info_points[0].innerHTML
-      var number_employees = info_points.length > 2 ? info_points[2].innerHTML : info_points[1].innerHTML
+      var industry = info_points[0].innerHTML.replace(/(\r\n|\n|\r)/gm, "")
+      var number_employees = info_points[1].querySelector('a').innerHTML.replace(/(\r\n|\n|\r)/gm, "").replace(/^\s+/, "")
 
       companies.push({
         company_name: company_name,
@@ -57,7 +58,7 @@ module.exports = {
         config_id: config.id,
         industry: industry,
         number_employees: number_employees,
-        linkedin_url: base_url+company_id+'/insights',
+        linkedin_url: base_url+company_url+'/insights',
         indeed_url: base_indeed+encodeURIComponent(company_name)
       })
     }

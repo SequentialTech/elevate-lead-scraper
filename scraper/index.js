@@ -26,11 +26,11 @@ module.exports = {
 
     // 2) If initial page loaded successfully, fill out login form
     if(status === 'success'){
-      //console.log('\nFilling out login form...')
+      console.log('\nFilling out login form...')
       await page.evaluate(helpers.login, config)
       step = 'searchResults'
     } else{
-      //console.log('failed to load')
+      console.log('failed to load')
       await instance.exit()
       return false
     }
@@ -44,27 +44,27 @@ module.exports = {
         return false
       }
       var url = await page.property('url')
-      //console.log(status, url)
+      console.log(status, url)
 
       // Ignore this redirect page
       if(url.indexOf('contract-chooser') !== -1) {
-        //console.log('\nIgnore page')
+        console.log('\nIgnore page')
         return true
       }
 
-      //console.log('\nPage load finished, executing page evaluation')
+      console.log('\nPage load finished, executing page evaluation')
       switch(step){
 
         case 'searchResults':
-          //console.log('\nParsing search results')
+          console.log('\nParsing search results')
           results = await page.evaluate(helpers.searchResults, config)
-          //console.log(results)
+          console.log(results)
 
           // Fetch indeed results from results
 
           // Report results to Elevate if present
           if(results.length){
-            //console.log('\nSending results to elevate..')
+            console.log('\nSending results to elevate..')
             // Append the growth % to each result
             results = helpers.appendGrowthPercent(results, config)
 
@@ -88,16 +88,16 @@ module.exports = {
           if(!results.length || results.length < 100){
             // If final search, exit!
             if(!urls[current_search + 1]){
-              //console.log('\nFinal search executed, exiting.')
+              console.log('\nFinal search executed, exiting.')
               await instance.exit()
               return true
             }
-            //console.log('\nEmpty results or final result set, proceeding to next search')
+            console.log('\nEmpty results or final result set, proceeding to next search')
             start_at = 0
             page.open(urls[current_search++]+start_at)
             break
           } else{
-            //console.log('\nNavigating to next page of results')
+            console.log('\nNavigating to next page of results')
             start_at += 100
             page.open(urls[current_search]+start_at)
             break
@@ -108,12 +108,12 @@ module.exports = {
 
     // URL Change
     await page.on('onLoadStarted', function() {
-      //console.log('\nPage requested')
+      console.log('\nPage requested')
     })
 
     // Page log -> cli
     await page.on('onConsoleMessage', function(msg, lineNum, sourceId) {
-      //console.log('\nWeb page logged: ' + msg)
+      console.log('\nWeb page logged: ' + msg)
     })
 
   },
