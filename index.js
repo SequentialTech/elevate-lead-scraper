@@ -61,6 +61,8 @@ app.post('/', (req, res) => {
   // Construct search URLs via config
   const urls = helpers.constructUrls(config)
 
+  console.log(urls)
+
   scraper.run(config, urls)
   res.writeHead(200)
   res.end()

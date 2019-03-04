@@ -1,5 +1,5 @@
 module.exports = {
-  constructUrls: function(config) {
+  constructUrlsOld: function(config) {
     // Base: https://www.linkedin.com/sales/search/companies?facet=CCR&facet.CCR=us%3A52&count=100&start=0&maxCompnanyGrowth=100
     // Construct via config vars:
     // facet.CS (Company Size, loop through)
@@ -9,61 +9,83 @@ module.exports = {
     const sizes = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
 
     return sizes.map( size => {
-      return `${base}&facet.CS=${size.toUpperCase()}&minCompanyGrowth=${config['size_'+size]}&start=`
+      return `${base}&companySize=${size.toUpperCase()}&minCompanyGrowth=${config['size_'+size]}&start=`
+    })
+  },
+
+  constructUrls: function(config) {
+    // Base: https://www.linkedin.com/sales/search/companies?facet=CCR&facet.CCR=us%3A52&count=100&start=0&maxCompnanyGrowth=100
+    // Construct via config vars:
+    // facet.CS (Company Size, loop through)
+    // minCompanyGrowth (specified in config per company size)
+
+    const base = 'https://www.linkedin.com/sales/search/company?geoIncluded=us:52&'
+    const sizes = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+
+    return sizes.map( size => {
+      return `${base}&companySize=${size.toUpperCase()}&companyHeadCountGrowth=(min:${config['size_'+size]},max:100)&page=`
     })
   },
 
   login: function(config) {
-    var email_input = document.querySelector('input#username')
-    var password_input = document.querySelector('input#password')
-    var submit_button = document.querySelector('button[type=submit]')
+    setInterval(function() {
+      var email_input = document.querySelector('input#username')
+      var password_input = document.querySelector('input#password')
+      var submit_button = document.querySelector('button[type=submit]')
 
-    email_input.value = config.email
-    password_input.value = config.password
-    submit_button.click()
+      console.log(window.location.href, email_input, password_input, submit_button)
+
+      if( !email_input || !password_input || !submit_button ) return
+
+      email_input.value = config.email
+      password_input.value = config.password
+      submit_button.click()
+    }, 1000)
   },
 
   searchResults: function(config) {
-    var base_url = "https://www.linkedin.com"
-    var companies = []
+    setTimeout(function() {
+      var base_url = "https://www.linkedin.com"
+      var companies = []
 
-    var base_indeed = "https://www.indeed.com/jobs?l=Georgia&q="
+      var base_indeed = "https://www.indeed.com/jobs?l=Georgia&q="
 
-    var results = document.getElementsByClassName('search-results__result-item')
-    console.log('results: ', results)
+      var results = document.getElementsByClassName('search-results__result-item')
+      // console.log('results: ', results)
 
-    for(var i = 0; i<results.length; i++){
-      var result = results[i]
-      console.log('result: ', result)
-      if(!result) continue
+      for(var i = 0; i<results.length; i++){
+        var result = results[i]
+        console.log('result: ', result.innerHTML)
+        if(!result) continue
 
-      var name = result.querySelector('dt.result-lockup__name a')
-      console.log('name: ', name)
-      if(!name) continue
+        var name = result.querySelector('dt.result-lockup__name a')
+        console.log('name: ', name)
+        if(!name) continue
 
-      var company_url = name.getAttribute('href').split('?')[0]
-      var company_name = name.innerHTML.replace(/(\r\n|\n|\r)/gm, "").replace(/^\s+/, "")
-      var company_id = company_url.split('/')[3]
+        var company_url = name.getAttribute('href').split('?')[0]
+        var company_name = name.innerHTML.replace(/(\r\n|\n|\r)/gm, "").replace(/^\s+/, "")
+        var company_id = company_url.split('/')[3]
 
-      // Iterate through info to capture industry and company size
-      var info_points = result.querySelectorAll("li.result-lockup__misc-item")
-      if(info_points.length < 2) continue // If data is not present, or fully present, ignore
+        // Iterate through info to capture industry and company size
+        var info_points = result.querySelectorAll("li.result-lockup__misc-item")
+        if(info_points.length < 2) continue // If data is not present, or fully present, ignore
 
-      var industry = info_points[0].innerHTML.replace(/(\r\n|\n|\r)/gm, "")
-      var number_employees = info_points[1].querySelector('a').innerHTML.replace(/(\r\n|\n|\r)/gm, "").replace(/^\s+/, "")
+        var industry = info_points[0].innerHTML.replace(/(\r\n|\n|\r)/gm, "")
+        var number_employees = info_points[1].querySelector('a').innerHTML.replace(/(\r\n|\n|\r)/gm, "").replace(/^\s+/, "")
 
-      companies.push({
-        company_name: company_name,
-        linkedin_id: company_id,
-        config_id: config.id,
-        industry: industry,
-        number_employees: number_employees,
-        linkedin_url: base_url+company_url+'/insights',
-        indeed_url: base_indeed+encodeURIComponent(company_name)
-      })
-    }
+        companies.push({
+          company_name: company_name,
+          linkedin_id: company_id,
+          config_id: config.id,
+          industry: industry,
+          number_employees: number_employees,
+          linkedin_url: base_url+company_url+'/insights',
+          indeed_url: base_indeed+encodeURIComponent(company_name)
+        })
+      }
 
-    return companies
+      console.log(companies)
+    }, 2000)
   },
 
   indeed: function(){

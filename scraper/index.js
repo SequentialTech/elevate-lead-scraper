@@ -15,12 +15,23 @@ module.exports = {
     var current_search = 0
 
     // Variable to track search pages
-    var start_at = 0
+    var start_at = 1
 
 
     // 1) Initialize phantom
     const instance = await phantom.create()
     const page = await instance.createPage()
+
+    // URL Change
+    await page.on('onLoadStarted', function() {
+      console.log('\nPage requested')
+    })
+
+    // Page log -> cli
+    await page.on('onConsoleMessage', function(msg, lineNum, sourceId) {
+      console.log('\nWeb page logged: ' + msg)
+    })
+
     const status = await page.open(urls[current_search]+start_at)
 
 
@@ -85,7 +96,7 @@ module.exports = {
 
 
           // If results are empty, proceed to next search url
-          if(!results.length || results.length < 100){
+          if(!results.length){
             // If final search, exit!
             if(!urls[current_search + 1]){
               console.log('\nFinal search executed, exiting.')
@@ -93,27 +104,17 @@ module.exports = {
               return true
             }
             console.log('\nEmpty results or final result set, proceeding to next search')
-            start_at = 0
+            start_at = 1
             page.open(urls[current_search++]+start_at)
             break
           } else{
             console.log('\nNavigating to next page of results')
-            start_at += 100
+            start_at += 1
             page.open(urls[current_search]+start_at)
             break
           }
           break
       }
-    })
-
-    // URL Change
-    await page.on('onLoadStarted', function() {
-      console.log('\nPage requested')
-    })
-
-    // Page log -> cli
-    await page.on('onConsoleMessage', function(msg, lineNum, sourceId) {
-      console.log('\nWeb page logged: ' + msg)
     })
 
   },
