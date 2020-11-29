@@ -1,21 +1,14 @@
 {
   "name": "elevate-lead-scraper",
-  "version": "1.0.0",
-  "description": "get those leads baby",
-  "main": "index.js",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "serve": "clear && node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./bin/www"
   },
-  "author": "EJ Rudy",
-  "license": "ISC",
   "dependencies": {
-    "async": "^2.6.1",
-    "axios": "^0.18.0",
-    "body-parser": "^1.18.2",
-    "dotenv": "^5.0.1",
-    "express": "^4.16.3",
-    "logger": "0.0.1",
-    "phantom": "^4.0.12"
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "morgan": "~1.9.1"
   }
 }
