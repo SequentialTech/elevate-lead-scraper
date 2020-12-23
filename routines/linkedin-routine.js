@@ -1,4 +1,6 @@
-export default class LinkedinRoutine {
+const puppeteer = require('puppeteer')
+
+class LinkedinRoutine {
   constructor(batchId, config) {
     this.batchId = batchId
     this.config = config
@@ -21,8 +23,10 @@ export default class LinkedinRoutine {
     const loginResult = await this.login()
     if(!loginResult) {
       // Notify Elevate of error? Bugsnag?
+      console.log('linkedin login failed')
       return false
     }
+    console.log('linkedin login successful, searching')
 
     // Run search
     await this.search()
@@ -39,10 +43,11 @@ export default class LinkedinRoutine {
     await this.page.type('#username', process.env.LINKEDIN_USERNAME)
     await this.page.type('#password', process.env.LINKEDIN_PASSWORD)
     await this.page.click('button[type="submit"]')
-    await this.page.waitForNavigation()
 
-    // TO DO: Handle authentication, if success return true, else return false
-    // return boolean
+    // Handle login success/failurre
+    const response = await this.page.waitForNavigation()
+    const status = response.status()
+    return status === 200
   }
 
   async search() {
@@ -53,10 +58,13 @@ export default class LinkedinRoutine {
     // page={PAGE_NUM}
     // companyHeadCountGrowth=(min:{MIN_GROWTH,max:100})
     // geoIncluded=90000052
-    await this.page.goto(`https://www.linkedin.com/sales/search/company?companySize=${this.config.companySize}&companyHeadCountGrowth=(min:${this.config.minGrowth},max:100)&page=${this.currentPage}&geoIncluded=90000052`)
+    const url = `https://www.linkedin.com/sales/search/company?companySize=${this.config.companySize}&companyHeadCountGrowth=(min:${this.config.minGrowth},max:100)&page=${this.currentPage}&geoIncluded=90000052`
+    console.log('searching: ', url)
+    await this.page.goto(url, { waitUntil: 'networkidle0' })
 
     // Parse the page
     const pageResults = this.parsePageResults()
+    return true
     // Expect { data: scrapedResults, next: boolean }
     // Push results, check next variable
     // If next is true, bump page number and go to next page
@@ -64,10 +72,33 @@ export default class LinkedinRoutine {
   }
 
   async parsePageResults() {
-    // Check if results are present
-    // const resultNames = await this.page.$eval('.result-lockup__name > a', el => el.innerText)
+    // Find results
+    const results = await this.page.evaluate(sel => {
+      let elements = Array.from(document.querySelectorAll(sel))
 
-    // Iterate results to pull company metadata
+      // Parse all required info
+      let data = elements.map(element => {
+        // Company Name
+        // Linkedin ID
+        // Linkedin URL
+        // Number of employees (don't need to extract)
+        // Industry
+        // Indeed URL (look at old code)
+        // Growth Percent (need to open company page)
+        return {
+          name: 'Test',
+          linkedin_id: 1000
+        }
+      })
+
+      return data
+
+    }, '.search-results__result-item')
+    console.log(results)
+
     // Check for next page, if present return true, if not return false
+    return true
   }
 }
+
+module.exports = LinkedinRoutine
