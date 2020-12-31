@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer')
+const { asyncForEach } = require('../helpers')
 
 class LinkedinRoutine {
   constructor(batchId, config) {
@@ -53,21 +54,28 @@ class LinkedinRoutine {
 
   async search() {
     // With newly created session, begin recursive search based off of config and current page
-    const url = `https://www.linkedin.com/sales/search/company?companySize=${this.config.companySize}&companyHeadCountGrowth=(min:${this.config.minGrowth},max:100)&page=${this.currentPage}&geoIncluded=90000052`
+    const url = `https://www.linkedin.com/sales/search/company?companySize=${this.config.companySize}&companyHeadCountGrowth=(min:${this.config.minGrowth},max:500)&page=${this.currentPage}&geoIncluded=90000052`
     console.info('searching: ', url)
     await this.page.goto(url, { waitUntil: 'networkidle2' })
-    await this.page.waitForTimeout(3000)
+    await this.page.waitForTimeout(2000)
 
-    // Parse the page
-    const pageResults = this.parsePageResults()
-    return true
-    // Expect { data: scrapedResults, next: boolean }
-    // Push results, check next variable
-    // If next is true, bump page number and re-run
-    // If false, set page number back to 1 and return
+    // Parse the page results, check for next page
+    const data = await this.parseSearchPageResults()
+
+    // Add to results
+    this.results.push(...data.results)
+
+    // Re-run search if next page, otherwise return
+    if(data.next) {
+      this.currentPage++
+      return this.search()
+    } else {
+      console.log(this.results)
+      return true
+    }
   }
 
-  async parsePageResults() {
+  async parseSearchPageResults() {
     // this.page.screenshot({ path: 'debug.js' })
     // Find results
     const results = await this.page.evaluate(sel => {
@@ -88,12 +96,11 @@ class LinkedinRoutine {
           // Industry
           let industry = element.querySelectorAll('li.result-lockup__misc-item')[0].innerText
 
-          // Indeed URL (look at old code)
-          // Growth Percent (need to open company page, scrape linkedinUrl)
-          // Number of employees (need to open company page)
+          // Indeed URL
+          let indeedUrl = `https://www.indeed.com/jobs?l=Georgia&q=${encodeURIComponent(companyName)}`
 
           return {
-            companyName, linkedinId, linkedinUrl, industry
+            companyName, linkedinId, linkedinUrl, industry, indeedUrl
           }
         } catch(exception) {
           console.error(exception)
@@ -103,13 +110,51 @@ class LinkedinRoutine {
 
       return data
     }, '.search-results__result-item')
-    console.log(results)
 
+    console.log('check for next page...')
     // Check for next page, if present return true, if not return false
     const next = await this.page.evaluate(sel => {
-
+      let nextButton = document.querySelector(sel)
+      return !!nextButton
     }, '.search-results__pagination-next-button')
-    return true
+    console.log('next page?', next)
+
+    // Iterate results, scrape insights page for number of employees and growth percent (linkedinUrl)
+    await asyncForEach(results, async (result) => {
+      try {
+        console.log(`looking up ${result.companyName} at ${result.linkedinUrl}`)
+        await this.page.goto(result.linkedinUrl, { waitUntil: 'networkidle2' })
+        await this.page.waitForTimeout(3000)
+
+        let { growthPercent, numberOfEmployees } = await this.page.evaluate(sel => {
+          let element = document.querySelector(sel)
+
+          // Check for employee increase...LinkedIn bug apparently will show companies that have LOST employees
+          let growthElement = element.querySelector('.employee-increase')
+          if(!growthElement) {
+            throw 'Company actually shrunk :/'
+          }
+
+          // Growth percent
+          let growthPercent = growthElement.innerText.replace(' ', '').trim()
+
+          // Number of employees
+          let numberOfEmployees = element.querySelectorAll('.graph-stats')[1].innerText.replace('(', '').replace(')', '').trim()
+
+          return { growthPercent, numberOfEmployees }
+        }, '.insights-employee-container')
+
+        result.growthPercent = growthPercent
+        result.numberOfEmployees = numberOfEmployees
+        return true
+      } catch (error) {
+        result.growthPercent = 'N/A'
+        result.numberOfEmployees = 'N/A'
+        return false
+      }
+    })
+
+    return { results, next }
   }
 }
 
