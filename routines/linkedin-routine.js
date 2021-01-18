@@ -17,7 +17,13 @@ class LinkedinRoutine {
 
   async run() {
     // Init browser
-    this.browser = await puppeteer.launch({ defaultViewport: { width: 1440, height: 7000 } })
+    this.browser = await puppeteer.launch({
+      defaultViewport: { width: 1440, height: 7000 },
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+      ],
+    })
     this.page = await this.browser.newPage()
     this.page.on('console', consoleObj => console.log(consoleObj.text()))
 
