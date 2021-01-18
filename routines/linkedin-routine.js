@@ -124,19 +124,21 @@ class LinkedinRoutine {
       try {
         console.log(`looking up ${result.companyName} at ${result.linkedinUrl}`)
         await this.page.goto(result.linkedinUrl, { waitUntil: 'networkidle2' })
-        await this.page.waitForTimeout(3000)
+        await this.page.waitForTimeout(1000)
 
-        let { growthPercent, numberOfEmployees } = await this.page.evaluate(sel => {
+        let { growthPercent, numberOfEmployees } = await this.page.evaluate(async (sel) => {
           let element = document.querySelector(sel)
 
-          // Check for employee increase...LinkedIn bug apparently will show companies that have LOST employees
-          let growthElement = element.querySelector('.employee-increase')
-          if(!growthElement) {
-            throw 'Company actually shrunk :/'
-          }
+          // Toggle to year
+          let growthSelect = document.querySelector('.employee-insights-filter')
+          growthSelect.value = 'YEAR'
+          growthSelect.dispatchEvent(new Event('change'))
+
+          // Wait for DOM update
+          await new Promise(resolve => setTimeout(resolve, 1000))
 
           // Growth percent
-          let growthPercent = growthElement.innerText.replace(' ', '').trim()
+          let growthPercent = element.querySelector('.employee-increase').innerText.replace(' ', '').trim()
 
           // Number of employees
           let numberOfEmployees = element.querySelectorAll('.graph-stats')[1].innerText.replace('(', '').replace(')', '').trim()
@@ -147,6 +149,7 @@ class LinkedinRoutine {
         result.growthPercent = growthPercent
         result.numberOfEmployees = numberOfEmployees
         return true
+
       } catch (error) {
         result.growthPercent = 'N/A'
         result.numberOfEmployees = 'N/A'
