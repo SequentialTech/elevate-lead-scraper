@@ -114,8 +114,8 @@ class LinkedinRoutine {
     console.log('check for next page...')
     // Check for next page, if present return true, if not return false
     const next = await this.page.evaluate(sel => {
-      let nextButton = document.querySelector(sel)
-      return !!nextButton
+      let nextPage = !document.querySelector(sel).disabled
+      return nextPage
     }, '.search-results__pagination-next-button')
     console.log('next page?', next)
 

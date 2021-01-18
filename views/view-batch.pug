@@ -1,0 +1,153 @@
+html
+  head
+    title Linkedin Results (ID: #{batch.batch_id})
+    meta(name="viewport", content="width=device-width, initial-scale=1, user-scalable=no")
+    link(rel="stylesheet", href="https://fonts.googleapis.com/css?family=Raleway")
+    link(rel="stylesheet", href="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.23/b-1.6.5/b-html5-1.6.5/r-2.2.7/datatables.min.css")
+    style.
+      html, body {
+        font-family: "Raleway", sans-serif;
+        width: 100%;
+        min-height: 100vh;
+        height: auto;
+        margin: 0;
+        padding: 20px 0;
+        background: #eee;
+        display: flex;
+        justify-content: center;
+      }
+      a {
+        color: #0c61bb;
+        text-decoration: none;
+      }
+      h1,h2,h3,h4,h5,h6,p {
+        margin: 0;
+        padding: 0;
+      }
+      h1 small {
+        font-size: 17px;
+        font-weight: 400;
+        line-height: 40px;
+      }
+      .main-container {
+        width: 100%;
+        max-width: 1000px;
+        padding: 25px;
+        background: white;
+        border-radius: 4px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        vertical-align: middle;
+      }
+      .results-table-container {
+        border-top: 1px solid #ccc;
+        padding-top: 20px;
+      }
+      .h-30 {
+        height: 30px;
+      }
+      .w-100 {
+        width: 100%;
+      }
+      .w-50 {
+        width: 50%;
+      }
+      .mt-10 {
+        margin-top: 10px;
+      }
+      .mt-20 {
+        margin-top: 20px;
+      }
+      .mt-50 {
+        margin-top: 50px;
+      }
+      .mb-20 {
+        margin-bottom: 20px;
+      }
+      .text-left {
+        text-align: left;
+      }
+      .text-right {
+        text-align: right;
+      }
+      .text-center {
+        text-align: center;
+      }
+      .status-icon {
+        margin-left: 8px;
+      }
+      .status-icon i {
+        margin-right: 3px;
+        font-size: 17px;
+      }
+      .status-icon i.fa-check-circle {
+        color: green;
+      }
+
+  body
+    .main-container
+      h1.w-50.h-30 LinkedIn Results
+        br
+        small Company Size: #{employeeCountRange} | Min Growth: #{batch.min_growth}%
+      p.w-50.mt-10.mb-20.text-right.h-30 ID: #{batch.batch_id} | Status:
+        span.status-icon
+          if batch.status == 'succeeded'
+            i.fas.fa-check-circle
+            span Complete
+          else if batch.status == 'running'
+            i.fas.fa-sync-alt
+            span Running
+          else
+            i.fas.fa-times-circle
+            span Failed
+
+      .w-100.mt-20.results-table-container
+        if !results.length
+          h2.text-center No results yet
+            br
+            br
+            small: a(onclick="javascript:window.location.reload();" href="#") Refresh
+        else
+          table#results-table.stripe.display.cellborder
+            thead
+              th Company
+              th Industry
+              th Growth %
+              th # of Employees (on LinkedIn)
+              th LinkedIn Page
+            tbody
+              each result, index in results
+                tr
+                  td: a(href=`${result.data.linkedinUrl}` target="_blank")
+                    | #{result.data.companyName}&nbsp;
+                    i.fab.fa-linkedin
+                  td= result.data.industry
+                  td= result.data.growthPercent == 'N/A' ? null : parseInt(result.data.growthPercent.split("%")[0])
+                  td= result.data.numberOfEmployees == 'N/A' ? null : parseInt(result.data.numberOfEmployees)
+                  td= result.data.linkedinUrl
+
+
+
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js")
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js")
+    script(src="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.23/b-1.6.5/b-html5-1.6.5/r-2.2.7/datatables.min.js")
+    script(src="https://kit.fontawesome.com/ffeca8c188.js", crossorigin="anonymous")
+    script.
+      $(() => {
+        $('#results-table').DataTable({
+          dom: 'Blfrtip',
+          responsive: true,
+          order: [[ 2, "desc" ]],
+          buttons: ['excel', 'csv'],
+          pageLength: 25,
+          columnDefs: [
+            {
+              targets: [4],
+              visible: false
+            }
+          ]
+        })
+      })
+
